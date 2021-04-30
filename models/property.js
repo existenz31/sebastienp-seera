@@ -2,7 +2,6 @@
 // Learn how here: https://docs.forestadmin.com/documentation/v/v6/reference-guide/models/enrich-your-models
 module.exports = (sequelize, DataTypes) => {
   const { Sequelize} = sequelize;
-  const Op = Sequelize.Op;
 
   // This section contains the fields of your model, mapped to your table's columns.
   // Learn more here: https://docs.forestadmin.com/documentation/v/v6/reference-guide/models/enrich-your-models#declaring-a-new-field-in-a-model
@@ -59,11 +58,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     createdAt: {
       type: DataTypes.DATE,
-      defaultValue: "CURRENT_TIMESTAMP",
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     updatedAt: {
       type: DataTypes.DATE,
-      defaultValue: "CURRENT_TIMESTAMP",
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     username: {
       type: DataTypes.STRING,
@@ -71,11 +70,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     originalNameEn: {
       type: DataTypes.STRING,
-      defaultValue: "NULL",
+      defaultValue: null,
     },
     originalNameAr: {
       type: DataTypes.STRING,
-      defaultValue: "NULL",
+      defaultValue: null,
     },
     compoundId: {
       type: DataTypes.INTEGER,
@@ -100,17 +99,72 @@ module.exports = (sequelize, DataTypes) => {
     unitNumber: {
       type: DataTypes.STRING,
     },
+    countryNameEn: {
+      type: DataTypes.STRING,
+    },
+    countryNameAr: {
+      type: DataTypes.STRING,
+    },
+    cityNameEn: {
+      type: DataTypes.STRING,
+    },
+    cityNameAr: {
+      type: DataTypes.STRING,
+    },
+    regionNameEn: {
+      type: DataTypes.STRING,
+    },
+    regionNameAr: {
+      type: DataTypes.STRING,
+    },
+    areaNameEn: {
+      type: DataTypes.STRING,
+    },
+    areaNameAr: {
+      type: DataTypes.STRING,
+    },
   }, {
-    tableName: 'property',
+    tableName: 'property_view',
     underscored: true,
     schema: process.env.DATABASE_SCHEMA,
-  });
+    hooks: {
+      afterFind: async (properties) => {
+        // Check if several records have been fetched or a single one
+        const isFindOne = !properties.length;
+        if (isFindOne) { properties = [properties]; }
+        const recordsIds = properties.map(record => record.locationIdKey);
+        const locations = await sequelize.models.location.findAll({
+          where: { id: recordsIds },
+          include: [{
+            model: sequelize.models.country,
+            as: 'countryCode'
+          }, {
+            model: sequelize.models.city,
+            as: 'city'
+          }, {
+            model: sequelize.models.region,
+            as: 'region'
+          }, {
+            model: sequelize.models.area,
+            as: 'area'
+          }]          
+        });
 
-  // Property.addScope('defaultScope', {
-  //   where: { nameAr: {
-  //     [Op.ne]: null
-  //   } }
-  // }, { override: true });
+        properties.forEach((property) => {
+          let location = locations.filter( (loc) => loc.id = property.locationIdKey);
+          location = location.length?location[0]: null;
+          if (location) {
+            property.country = location.countryCode;
+            property.city = location.city;
+            property.region = location.region;
+            property.area = location.area;              
+          }
+        });
+
+        return isFindOne ? properties[0] : properties;
+      },
+    },    
+  });
 
   // This section contains the relationships for this model. See: https://docs.forestadmin.com/documentation/v/v6/reference-guide/relationships#adding-relationships.
   Property.associate = (models) => {

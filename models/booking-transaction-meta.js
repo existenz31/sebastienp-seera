@@ -7,11 +7,11 @@ module.exports = (sequelize, DataTypes) => {
   const BookingTransactionMeta = sequelize.define('bookingTransactionMeta', {
     createdAt: {
       type: DataTypes.DATE,
-      defaultValue: "CURRENT_TIMESTAMP",
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     updatedAt: {
       type: DataTypes.DATE,
-      defaultValue: "CURRENT_TIMESTAMP",
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     username: {
       type: DataTypes.STRING,

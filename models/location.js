@@ -5,17 +5,21 @@ module.exports = (sequelize, DataTypes) => {
   // This section contains the fields of your model, mapped to your table's columns.
   // Learn more here: https://docs.forestadmin.com/documentation/v/v6/reference-guide/models/enrich-your-models#declaring-a-new-field-in-a-model
   const Location = sequelize.define('location', {
+    // countryCodePk: {
+    //   type: DataTypes.STRING,
+    //   field: 'Country_Code',
+    // },
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
     createdAt: {
       type: DataTypes.DATE,
-      defaultValue: "CURRENT_TIMESTAMP",
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     updatedAt: {
       type: DataTypes.DATE,
-      defaultValue: "CURRENT_TIMESTAMP",
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     username: {
       type: DataTypes.STRING,

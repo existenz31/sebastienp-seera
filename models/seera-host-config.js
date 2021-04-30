@@ -15,11 +15,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     createdAt: {
       type: DataTypes.DATE,
-      defaultValue: "CURRENT_TIMESTAMP",
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     updatedAt: {
       type: DataTypes.DATE,
-      defaultValue: "CURRENT_TIMESTAMP",
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     username: {
       type: DataTypes.STRING,

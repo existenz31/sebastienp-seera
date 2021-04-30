@@ -1,6 +1,9 @@
 const express = require('express');
 const { PermissionMiddlewareCreator } = require('forest-express-sequelize');
-const { property } = require('../models');
+const { property, image } = require('../models');
+
+const models = require('../models');
+const SeeraApiService = require('../services/seera-api-service');
 
 const router = express.Router();
 const permissionMiddlewareCreator = new PermissionMiddlewareCreator('property');
@@ -57,4 +60,46 @@ router.delete('/property', permissionMiddlewareCreator.delete(), (request, respo
   next();
 });
 
+
+router.post('/actions/property-upload-images', permissionMiddlewareCreator.smartAction(), async (req, res) => {
+  let propertyIdKey = req.body.data.attributes.ids[0];
+  const attrs = req.body.data.attributes.values;
+  const username = req.user.email;
+  const files = attrs['Files'];
+  
+  let images = [];
+  let apiService = new SeeraApiService();
+  apiService.uploadFiles(files)
+  .then(async (files) => {
+    try {
+      await models.connections.default.transaction(async (t) => {
+        for (const file of files) {
+          const i = await image.create({
+            propertyIdKey,
+            url: file.url,
+            height: file.height,
+            width: file.width,
+            size: file.size,
+            imageCategoryIdKey: attrs['Image Category En'],
+            roomIdKey: attrs['Property Room En'],
+            bathroomIdKey: attrs['Bathroom En'],
+            username,
+          }, { transaction: t });
+          images.push(i);
+        }
+    
+      });      
+    } 
+    catch (error) {
+      res.status(400).send({ error: 'Error when updating the images in database' });      
+      return;
+    }
+    res.send({success: 'Images uploaded'});
+  })
+  .catch(error => {
+    res.status(400).send({ error: 'Error when uploading the file' });
+    console.error(error);
+  })
+
+});
 module.exports = router;
